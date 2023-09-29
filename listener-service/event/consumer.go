@@ -35,7 +35,7 @@ func (consumer *Consumer) setup() error {
 		return err
 	}
 
-	return declarExchange(channel)
+	return declareExchange(channel)
 }
 
 type Payload struct {
@@ -50,7 +50,7 @@ func (consumer *Consumer) Listen(topics []string) error {
 	}
 	defer ch.Close()
 
-	q, err := declarRandomQueue(ch)
+	q, err := declareRandomQueue(ch)
 	if err != nil {
 		return err
 	}
