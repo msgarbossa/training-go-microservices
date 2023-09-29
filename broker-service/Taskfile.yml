@@ -1,0 +1,100 @@
+---
+
+# Taskfile is an alternative to Makefile and is written in go:
+# https://taskfile.dev/
+
+version: "3"
+
+vars:
+    BINARY: brokerApp
+    BUILD_DATE: {sh: date -u +"%Y%m%d"}
+    # BUILD_VERSION: {sh: git describe --tags}
+    # LDFLAGS: "-ldflags \"-X main.BuildVersion={{.BUILD_VERSION}} -X main.BuildDate={{.BUILD_DATE}}\""
+    OUT: out
+    # CONTAINER_IMAGE: "autoeng.azurecr.io/{{.BINARY}}"
+
+tasks:
+    clean:
+        desc: Cleanup build and test directories
+        cmds:
+            - rm -rf {{.OUT}}
+            - mkdir -p {{.OUT}}
+
+    # docker_build:
+    #     desc: Build the container image
+    #     deps: [go_build_linux]
+    #     cmds:
+    #         - docker build -t {{.CONTAINER_IMAGE}}:latest -f broker-service.dockerfile .
+
+    go_sec:
+        desc: Security scanning of code using Salus, which runs Gosec, GoOSV, and other tools
+        cmds:
+            # - docker run --rm -t -v $(pwd):/home/repo autoeng.azurecr.io/salus:latest -c file://tests/salus.yaml
+            - docker run --rm -t -v $(pwd):/home/repo coinbase/salus:latest -c file://tests/salus.yaml
+
+    # docker_push:
+    #     desc: Push the container image to the registry
+    #     cmds:
+    #         - docker push {{.CONTAINER_IMAGE}}:latest
+
+    # go_build_darwin:
+    #     desc: Build the go binary for MacOS
+    #     deps: [clean]
+    #     cmds:
+    #         - CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build {{.LDFLAGS}} -o ./{{.OUT}}/{{.BINARY}}-darwin-amd64 ./cmd/server
+    
+    go_build_linux:
+        desc: Build the go binary for Linux
+        deps: [clean]
+        env:
+            GOOS: linux
+            GOARCH: amd64
+        cmds:
+            - CGO_ENABLED=0 go build -o ./{{.OUT}}/{{.BINARY}} ./cmd/api
+
+    dep:
+        desc: Update dependencies
+        cmds:
+            - go mod tidy
+            - go mod download
+
+    update_all_modules:
+        desc: Update all modules to latest versions
+        env:
+            GOOS: linux
+            GOARCH: amd64
+        cmds:
+            - rm -f go.mod
+            - rm -f go.sum
+            - rm -rf vendor
+            - GOOS=${GOOS} GOARCH=${GOARCH} CGO_ENABLED=0 go mod init broker-service
+            - GOOS=${GOOS} GOARCH=${GOARCH} CGO_ENABLED=0 go mod tidy
+            - GOOS=${GOOS} GOARCH=${GOARCH} CGO_ENABLED=0 go mod vendor
+
+    vendor:
+        desc: Vendor go modules in ./vendor directory
+        env:
+            GOOS: linux
+            GOARCH: amd64
+        cmds:
+            - rm -rf ./vendor
+            - GOOS=${GOOS} GOARCH=${GOARCH} CGO_ENABLED=0 go mod vendor
+
+    fmt:
+        desc: Auto-correct lint issues
+        env:
+            GOFMT_FILES: {sh: find . -name '*.go'}
+        cmds:
+            - gofmt -w ${GOFMT_FILES}
+
+    test:
+        desc: Run go test
+        deps: [clean]
+        cmds:
+            - go test ./... -v -race
+
+    coverage:
+        desc: Run code coverage test
+        deps: [clean]
+        cmds:
+            - go test ./... -v -race -covermode=atomic

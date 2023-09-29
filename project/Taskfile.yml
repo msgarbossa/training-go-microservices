@@ -1,0 +1,159 @@
+---
+
+# Taskfile is an alternative to Makefile and is written in go:
+# https://taskfile.dev/
+
+version: "3"
+
+vars:
+    BINARY: brokerApp
+    FRONT_END_BINARY: frontApp
+    AUTH_BINARY: authApp
+    BROKER_BINARY: brokerApp
+    LOGGER_BINARY: loggerServiceApp
+    MAIL_BINARY: mailerApp
+    LISTENER_BINARY: listenerApp
+    BUILD_DATE: {sh: date -u +"%Y%m%d"}
+    # BUILD_VERSION: {sh: git describe --tags}
+    # LDFLAGS: "-ldflags \"-X main.BuildVersion={{.BUILD_VERSION}} -X main.BuildDate={{.BUILD_DATE}}\""
+    OUT: out
+    # CONTAINER_IMAGE: "autoeng.azurecr.io/{{.BINARY}}"
+
+tasks:
+
+    up:
+        desc: starts all containers in the background without forcing build
+        cmds:
+            - echo "Starting Docker images..."
+            - cmd: docker-compose up -d
+              silent: false
+            - echo "Docker images started!"
+        silent: true
+
+    up_build:
+        desc: stops docker-compose (if running), builds all projects and starts docker compose
+        deps:
+            - build_front
+            - build_broker
+            - build_auth
+            - build_logger
+            - build_mail
+            - build_listener
+        cmds:
+            - echo "Stopping docker images (if running...)"
+            - cmd: docker-compose down
+              silent: false
+            - echo "Building (when required) and starting docker images..."
+            - cmd: docker-compose up --build -d
+              silent: false
+            - echo "Docker images built and started!"
+        silent: true
+
+    down:
+        desc: stop docker compose
+        cmds:
+            - echo "Stopping docker compose..."
+            - cmd: docker-compose down
+              silent: false
+            - echo "Done!"
+        silent: true
+
+    build_broker:
+        desc: builds the broker binary as a linux executable
+        cmds:
+            - cmd: echo "Building broker binary..."
+              silent: true
+            - cd ../broker-service && env GOOS=linux CGO_ENABLED=0 go build -o {{.BROKER_BINARY}} ./cmd/api
+            - cmd: echo "Done!"
+              silent: true
+        sources:
+            - ../broker-service/cmd/api/*.go
+        generates:
+            - ../broker-service/{{.BROKER_BINARY}}
+
+    build_logger:
+        desc: builds the logger binary as a linux executable
+        cmds:
+            - cmd: echo "Building logger binary..."
+              silent: true
+            - cd ../logger-service && env GOOS=linux CGO_ENABLED=0 go build -o {{.LOGGER_BINARY}} ./cmd/api
+            - cmd: echo "Done!"
+              silent: true
+        sources:
+            - ../logger-service/cmd/api/*.go
+        generates:
+            - ../logger-service/{{.LOGGER_BINARY}}
+
+    build_listener:
+        desc: builds the listener binary as a linux executable
+        cmds:
+            - cmd: echo "Building listener binary..."
+              silent: true
+            - cd ../listener-service && env GOOS=linux CGO_ENABLED=0 go build -o {{.LISTENER_BINARY}} .
+            - cmd: echo "Done!"
+              silent: true
+        sources:
+            - ../listener-service/*.go
+            - ../listener-service/event/*.go
+        generates:
+            - ../listener-service/{{.LISTENER_BINARY}}
+
+    build_auth:
+        desc: builds the auth binary as a linux executable
+        cmds:
+            - cmd: echo "Building auth binary..."
+              silent: true
+            - cd ../authentication-service && env GOOS=linux CGO_ENABLED=0 go build -o {{.AUTH_BINARY}} ./cmd/api
+            - cmd: echo "Done!"
+              silent: true
+        sources:
+            - ../authentication-service/cmd/api/*.go
+        generates:
+            - ../authentication-service/{{.AUTH_BINARY}}
+
+    build_front:
+        desc: builds the front end binary
+        cmds:
+            - echo "Building front end binary..."
+            - cd ../front-end && env GOOS=linux CGO_ENABLED=0 go build -o {{.FRONT_END_BINARY}} ./cmd/web
+            - echo "Done!"
+        sources:
+            - ../front-end/cmd/web/*.go
+            - ../front-end/cmd/web/templates/*.gohtml
+        generates:
+            - ../front-end/{{.FRONT_END_BINARY}}
+
+    build_mail:
+        desc: builds the mail binary as a linux executable
+        cmds:
+            - cmd: echo "Building mail binary..."
+              silent: true
+            - cd ../mail-service && env GOOS=linux CGO_ENABLED=0 go build -o {{.MAIL_BINARY}} ./cmd/api
+            - cmd: echo "Done!"
+              silent: true
+        sources:
+            - ../mail-service/cmd/api/*.go
+        generates:
+            - ../mail-service/{{.LOGGER_BINARY}}
+
+    # Does not work.  Task does not background commands
+    # start:
+    #     desc: starts the front end
+    #     deps: [build_front]
+    #     cmds:
+    #         - echo "Starting front end"
+    #         - cd ../front-end && ./{{.FRONT_END_BINARY}}
+
+    # Does not work.  Task does not background commands
+    # stop:
+    #     desc: stop the front end
+    #     cmds:
+    #         - echo "Stopping front end..."
+    #         - pkill -SIGTERM -f "./{{.FRONT_END_BINARY}}"
+    #         - echo "Stopped front end!"
+
+    clean:
+        desc: Cleanup binaries
+        cmds:
+            - rm -f ../front-end/{{.FRONT_END_BINARY}}
+            - rm -f ../broker-service/{{.BROKER_BINARY}}
