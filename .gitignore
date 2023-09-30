@@ -1,4 +1,4 @@
 .task/
 *App
 project/db-data/
-
+*/.sum
