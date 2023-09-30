@@ -22,3 +22,12 @@ fi
 - Open folders in workspace with go.mod, not a parent directory (affects lint/auto-completion)
 
 
+## Go CLI reference
+
+### help on build options
+go help build
+
+### help on -ldflags option to go build
+go tool link
+
+
