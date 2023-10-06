@@ -68,6 +68,8 @@ tasks:
               silent: true
         sources:
             - ../broker-service/cmd/api/*.go
+            - ../broker-service/event/*.go
+            - ../broker-service/logs/*.go
         generates:
             - ../broker-service/{{.BROKER_BINARY}}
 
@@ -81,6 +83,8 @@ tasks:
               silent: true
         sources:
             - ../logger-service/cmd/api/*.go
+            - ../logger-service/data/*.go
+            - ../logger-service/logs/*.go
         generates:
             - ../logger-service/{{.LOGGER_BINARY}}
 
