@@ -29,10 +29,25 @@ services:
       dockerfile: ./../front-end/front-end.dockerfile
     restart: always
     ports:
-      - "80:80"
+      - "8083:80"
     deploy: 
       mode: replicated
       replicas: 1
+
+  micro-caddy:
+    build:
+      context: ./../micro-caddy
+      dockerfile: ./../micro-caddy/caddy.dockerfile
+    restart: always
+    ports:
+      - "80:80"
+      - "9443:443"
+    deploy: 
+      mode: replicated
+      replicas: 1
+    volumes:
+      - ./caddy_data:/data
+      - ./caddy_config:/config
 
   mailer-service:
     build:
