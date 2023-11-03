@@ -10,6 +10,14 @@ Notable changes from the course:
 
 ## Setup
 
+### Dependencies
+
+- Go (see below)
+- Docker
+- docker-compose
+- VS Code
+- Taskfile
+
 ### Go installation
 
 Install the Golang package for your CPU architecture from https://go.dev/doc/install.  Extracting tar file in /usr/local/go (/usr/local/go/bin/go should exist).
@@ -107,4 +115,33 @@ $ go test -v .
 PASS
 ok  	authentication/cmd/api	(cached)
 ```
+
+## Cleanup
+
+The container build process can leave many dangling images.
+
+List dangling images:
+```
+docker images -f dangling=true
+```
+
+To remove dangling images:
+```
+docker images --quiet --filter=dangling=true | xargs docker rmi
+```
+
+To cleanup the go microservice images:
+```
+docker image rm project_authentication-service:latest
+docker image rm project_mailer-service:latest
+docker image rm project_front-end:latest
+docker image rm project_micro-caddy:latest
+docker image rm project_logger-service:latest
+docker image rm project_broker-service:latest
+docker image rm project_listener-service:latest
+```
+
+Scripts with above commands:
+- ./project/cleanup-dangling-images.sh
+- ./project/cleanup-project-images.sh
 
