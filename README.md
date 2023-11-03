@@ -1,6 +1,16 @@
+#
 
+## Overview
+
+This repo contains the code created from the lab exercises from https://www.udemy.com/course/working-with-microservices-in-go/.
+
+Notable changes from the course:
+- Used [Taskfile](https://taskfile.dev/) instead of GNU Make
+- The front-end is also run from a container instead of locally on http://localhost:8083
 
 ## Setup
+
+### Go installation
 
 Install the Golang package for your CPU architecture from https://go.dev/doc/install.  Extracting tar file in /usr/local/go (/usr/local/go/bin/go should exist).
 
@@ -21,6 +31,17 @@ fi
 - Add extension named `gotemplate-syntax`
 - Go to command palette > "Go: Install/Update Tasks" > check the "all" box to select all, then "OK".
 - Open folders in workspace with go.mod, not a parent directory (affects lint/auto-completion)
+
+### Postgres
+
+To run sql to load data, use one of the following options
+
+1. Use Beekeeper (GUI)
+2. pipe sql file into psql
+
+```
+cat ../authentication-service/users.sql | docker exec -i project-postgres-1 psql -U postgres -d users
+```
 
 ### Mongo Compass
 
@@ -65,5 +86,25 @@ Can just download the package, unzip, and copy protoc binary from bin directory 
 ```bash
 cd logger-service/logs
 protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative logs.proto
+```
+
+## Testing
+
+### Test interface
+
+- http://localhost:8083 for the front-end container
+- http://localhost:80 for the caddy reverse proxy to the front-end
+
+### go test
+
+```bash
+$ cd authentication-service/cmd/api/
+$ go test -v .
+=== RUN   Test_Authenticate
+--- PASS: Test_Authenticate (0.00s)
+=== RUN   Test_routes_exist
+--- PASS: Test_routes_exist (0.00s)
+PASS
+ok  	authentication/cmd/api	(cached)
 ```
 
