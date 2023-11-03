@@ -112,6 +112,7 @@ tasks:
               silent: true
         sources:
             - ../authentication-service/cmd/api/*.go
+            - ../../authentication-service/data/*.go
         generates:
             - ../authentication-service/{{.AUTH_BINARY}}
 
