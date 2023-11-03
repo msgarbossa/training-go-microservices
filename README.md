@@ -6,7 +6,7 @@ This repo contains the code created from the lab exercises from https://www.udem
 
 Notable changes from the course:
 - Used [Taskfile](https://taskfile.dev/) instead of GNU Make
-- The front-end is also run from a container instead of locally on http://localhost:8083
+- The front-end is also run from a container on http://localhost:8083 instead of with `go run`
 
 ## Setup
 
